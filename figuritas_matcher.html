@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Intercambio de Figuritas</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #f5f4f0;
+  --surface: #ffffff;
+  --surface2: #eeecea;
+  --text: #1a1917;
+  --text2: #6b6760;
+  --border: rgba(0,0,0,0.10);
+  --border2: rgba(0,0,0,0.18);
+  --green-bg: #e6f4e0;
+  --green-text: #2e6b1a;
+  --red-bg: #fceaea;
+  --red-text: #a82d2d;
+  --accent: #2e6b1a;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --pill: 20px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #181714;
+    --surface: #221f1c;
+    --surface2: #2c2926;
+    --text: #f0ede8;
+    --text2: #9a9590;
+    --border: rgba(255,255,255,0.09);
+    --border2: rgba(255,255,255,0.16);
+    --green-bg: #1a3312;
+    --green-text: #7ecb5a;
+    --red-bg: #3a1414;
+    --red-text: #f08080;
+    --accent: #7ecb5a;
+  }
+}
+body { font-family: 'Helvetica Neue', Arial, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 2rem 1rem 5rem; }
+.page { max-width: 700px; margin: 0 auto; }
+
+h1 { font-size: clamp(22px, 4vw, 30px); font-weight: 700; letter-spacing: -0.4px; }
+.tagline { font-size: 14px; color: var(--text2); margin-top: 5px; margin-bottom: 2rem; }
+
+.step { margin-bottom: 1.5rem; }
+.step-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text2); margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+.step-num { width: 20px; height: 20px; border-radius: 50%; background: var(--text2); color: var(--surface); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.step-num.done { background: var(--accent); }
+textarea {
+  width: 100%;
+  min-height: 130px;
+  padding: 10px 12px;
+  font-family: 'Menlo', 'Courier New', monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--text);
+  background: var(--surface);
+  border: 0.5px solid var(--border2);
+  border-radius: var(--radius-sm);
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.15s;
+}
+textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 20%, transparent); }
+textarea::placeholder { color: var(--text2); opacity: 0.7; }
+
+.hint { font-size: 12px; color: var(--text2); margin-top: 5px; line-height: 1.5; }
+
+.btn-row { display: flex; gap: 10px; margin-top: 1.5rem; flex-wrap: wrap; }
+button {
+  padding: 9px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.15s, transform 0.1s;
+}
+button:active { transform: scale(0.97); }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { opacity: 0.88; }
+.btn-secondary { background: var(--surface2); color: var(--text); border: 0.5px solid var(--border2); }
+.btn-secondary:hover { background: var(--surface); }
+
+.error { font-size: 13px; color: var(--red-text); background: var(--red-bg); padding: 8px 12px; border-radius: var(--radius-sm); margin-top: 10px; display: none; }
+
+hr { border: none; border-top: 0.5px solid var(--border); margin: 2rem 0; }
+
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1.5rem; }
+.stat { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px 12px; text-align: center; }
+.stat-num { font-size: 26px; font-weight: 700; line-height: 1; }
+.stat-num.green { color: var(--green-text); }
+.stat-num.red { color: var(--red-text); }
+.stat-label { font-size: 11px; color: var(--text2); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.4px; }
+
+.progress-bar { height: 5px; background: var(--border); border-radius: 99px; margin-bottom: 1.5rem; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--accent); border-radius: 99px; transition: width 0.5s ease; }
+
+.sections { display: flex; flex-direction: column; gap: 8px; }
+.section { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.section-header { display: flex; align-items: center; justify-content: space-between; padding: 11px 14px; cursor: pointer; user-select: none; gap: 8px; }
+.section-header:hover { background: var(--surface2); }
+.section-title { font-size: 14px; font-weight: 600; color: var(--text); flex: 1; }
+.badges { display: flex; gap: 5px; align-items: center; flex-shrink: 0; }
+.badge { font-size: 11px; padding: 2px 9px; border-radius: var(--pill); font-weight: 600; }
+.badge-match { background: var(--green-bg); color: var(--green-text); }
+.badge-remain { background: var(--red-bg); color: var(--red-text); }
+.chevron { width: 15px; height: 15px; color: var(--text2); flex-shrink: 0; transition: transform 0.18s; }
+.chevron.open { transform: rotate(180deg); }
+.section-body { display: none; padding: 0 14px 12px; border-top: 0.5px solid var(--border); }
+.section-body.open { display: block; }
+.row-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text2); margin-top: 10px; margin-bottom: 5px; }
+.stickers-row { display: flex; flex-wrap: wrap; gap: 5px; }
+.sticker { font-size: 12px; padding: 3px 10px; border-radius: var(--pill); font-weight: 600; }
+.sticker-match { background: var(--green-bg); color: var(--green-text); }
+.sticker-remain { background: var(--red-bg); color: var(--red-text); }
+.all-match { font-size: 13px; color: var(--green-text); padding-top: 10px; font-style: italic; }
+.results-title { font-size: 18px; font-weight: 700; margin-bottom: 1rem; letter-spacing: -0.3px; display: none; }
+.export-box { background: var(--surface); border: 0.5px solid var(--border2); border-radius: var(--radius); padding: 14px 16px; margin-top: 1.5rem; }
+.export-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.export-label { font-size: 13px; font-weight: 600; color: var(--text); }
+.btn-copy { padding: 5px 14px; font-size: 12px; font-weight: 600; border-radius: var(--radius-sm); cursor: pointer; border: 0.5px solid var(--border2); background: var(--surface2); color: var(--text); transition: opacity 0.15s; }
+.btn-copy:hover { opacity: 0.75; }
+.btn-copy.copied { background: var(--green-bg); color: var(--green-text); border-color: transparent; }
+pre#export-text { font-family: 'Menlo','Courier New',monospace; font-size: 12px; line-height: 1.7; color: var(--text); white-space: pre-wrap; word-break: break-word; }
+footer { margin-top: 3rem; text-align: center; font-size: 12px; color: var(--text2); }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Intercambio de Figuritas</h1>
+  <p class="tagline">Ingresá los dos listados para ver qué puede intercambiar B con A</p>
+
+  <div class="step">
+    <div class="step-label"><span class="step-num" id="num1">1</span> Figuritas que le faltan a A</div>
+    <textarea id="inputA" placeholder="Me faltan
+FWC 🏆: 00, 1, 2, 3
+FWC 🌎: 5, 7, 8
+MEX 🇲🇽: 3, 7, 11, 13
+RSA 🇿🇦: 1, 2, 3, 6, 7"></textarea>
+    <p class="hint">Formato: <code>SECCIÓN [emoji opcional]: número, número, ...</code> — una sección por línea. La primer línea puede ser "Me faltan" u otro encabezado (se ignora).</p>
+  </div>
+
+  <div class="step">
+    <div class="step-label"><span class="step-num" id="num2">2</span> Repetidas de B</div>
+    <textarea id="inputB" placeholder="🇲🇽 MEX: 17, 18
+🇿🇦 RSA: 2, 3, 4, 5, 7
+🇰🇷 KOR: 2, 3, 5, 6, 7
+🇨🇦 CAN: 1, 2, 3, 6, 11"></textarea>
+    <p class="hint">Mismo formato. El emoji puede ir antes o después del código de sección.</p>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-primary" onclick="matchear()">Calcular intercambio</button>
+    <button class="btn-secondary" onclick="cargarEjemplo()">Cargar ejemplo</button>
+    <button class="btn-secondary" onclick="limpiar()">Limpiar</button>
+  </div>
+  <div class="error" id="error"></div>
+
+  <div id="results" style="display:none">
+    <hr>
+    <div class="results-title" id="results-title">Resultado del intercambio</div>
+    <div class="stats" id="stats"></div>
+    <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+    <div class="sections" id="sections"></div>
+
+    <div class="export-box" id="export-box" style="display:none">
+      <div class="export-header">
+        <span class="export-label">Lo que B le da a A — para copiar</span>
+        <button class="btn-copy" id="btn-copy" onclick="copiarExport()">Copiar</button>
+      </div>
+      <pre id="export-text"></pre>
+    </div>
+  </div>
+
+  <footer>intercambio de figuritas · <span id="fecha"></span></footer>
+</div>
+
+<script>
+document.getElementById('fecha').textContent = new Date().toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'});
+
+const EJEMPLO_A = `Me faltan
+FWC 🏆: 00, 1, 2, 3
+FWC 🌎: 5, 7, 8
+FWC 📜: 9, 10, 11, 12, 13, 14, 15, 16, 18, 19
+MEX 🇲🇽: 3, 7, 11, 13, 15, 18, 19, 20
+RSA 🇿🇦: 1, 2, 3, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 17, 18, 19, 20
+KOR 🇰🇷: 1, 3, 4, 8, 9, 10, 11, 13, 15, 16, 19, 20
+CZE 🇨🇿: 1, 2, 3, 4, 5, 8, 12, 13, 14, 17, 18, 19, 20
+CAN 🇨🇦: 1, 2, 3, 5, 6, 7, 11, 12, 15, 19
+BIH 🇧🇦: 1, 2, 4, 7, 8, 11, 12, 13, 15, 16, 17, 18, 19`;
+
+const EJEMPLO_B = `Host Countries and Cities (FWC): 8
+🇲🇽 MEX: 17, 18
+🇿🇦 RSA: 2, 3, 4, 5, 7, 9, 10, 11, 13, 14, 15, 16, 17, 19
+🇰🇷 KOR: 2, 3, 5, 6, 7, 8, 9, 10, 12, 14, 15, 16, 17, 18, 19
+🇨🇿 CZE: 1, 4, 6, 7, 10, 11, 15, 16, 19, 20
+🇨🇦 CAN: 1, 2, 3, 6, 11, 15, 16, 18, 19, 20
+🇧🇦 BIH: 2, 3, 6, 7, 10, 15, 19
+🇶🇦 QAT: 2, 3, 5, 6, 7, 10, 11, 12, 15, 17, 18, 19, 20
+🇨🇭 SUI: 4, 5, 8, 9, 12, 14, 15, 17, 18, 19
+🇧🇷 BRA: 5, 8, 9, 10, 12, 14, 15, 16, 17, 18, 19, 20
+🇲🇦 MAR: 6, 10
+🇭🇹 HAI: 3, 4, 5, 7, 9, 12, 14, 15, 16, 17, 18
+🏴󠁧󠁢󠁳󠁣󠁴󠁿 SCO: 6, 8, 9, 12, 14, 15, 17, 18
+🇺🇸 USA: 2, 6, 11, 18`;
+
+function normKey(k) {
+  return k.toUpperCase().replace(/[^A-Z0-9]/g,'').trim();
+}
+
+function parseLista(text) {
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+  const map = {};
+  for (const line of lines) {
+    const colonIdx = line.lastIndexOf(':');
+    if (colonIdx === -1) continue;
+    const rawKey = line.slice(0, colonIdx).trim();
+    const rawNums = line.slice(colonIdx + 1).trim();
+    if (!rawNums) continue;
+    const nums = rawNums.split(',').map(s => {
+      const t = s.trim();
+      if (t === '' || t === '-') return null;
+      const n = parseInt(t, 10);
+      return isNaN(n) ? null : n;
+    }).filter(n => n !== null);
+    if (nums.length === 0) continue;
+    const key = normKey(rawKey);
+    if (!key) continue;
+    if (!map[key]) map[key] = { label: rawKey, nums: [] };
+    map[key].nums.push(...nums);
+  }
+  return map;
+}
+
+function showError(msg) {
+  const el = document.getElementById('error');
+  el.textContent = msg;
+  el.style.display = msg ? 'block' : 'none';
+}
+
+function matchear() {
+  showError('');
+  const txtA = document.getElementById('inputA').value.trim();
+  const txtB = document.getElementById('inputB').value.trim();
+  if (!txtA) { showError('Ingresá el listado de A.'); return; }
+  if (!txtB) { showError('Ingresá el listado de B.'); return; }
+
+  const mapA = parseLista(txtA);
+  const mapB = parseLista(txtB);
+
+  if (Object.keys(mapA).length === 0) { showError('No se pudo leer el listado de A. Revisá el formato.'); return; }
+  if (Object.keys(mapB).length === 0) { showError('No se pudo leer el listado de B. Revisá el formato.'); return; }
+
+  document.getElementById('num1').classList.add('done');
+  document.getElementById('num2').classList.add('done');
+
+  const results = [];
+  let totalMatch = 0, totalMissing = 0;
+
+  for (const [normA, dataA] of Object.entries(mapA)) {
+    let extraNums = [];
+    for (const [normB, dataB] of Object.entries(mapB)) {
+      if (normB === normA || normB.includes(normA) || normA.includes(normB)) {
+        extraNums = dataB.nums;
+        break;
+      }
+    }
+    const extraSet = new Set(extraNums);
+    const matched = dataA.nums.filter(n => extraSet.has(n));
+    const remaining = dataA.nums.filter(n => !extraSet.has(n));
+    totalMatch += matched.length;
+    totalMissing += remaining.length;
+    results.push({ label: dataA.label, matched, remaining });
+  }
+
+  const total = totalMatch + totalMissing;
+
+  document.getElementById('stats').innerHTML = `
+    <div class="stat"><div class="stat-num green">${totalMatch}</div><div class="stat-label">B le puede dar</div></div>
+    <div class="stat"><div class="stat-num red">${totalMissing}</div><div class="stat-label">Siguen faltando</div></div>
+    <div class="stat"><div class="stat-num">${total > 0 ? Math.round(totalMatch/total*100) : 0}%</div><div class="stat-label">Completado</div></div>
+  `;
+  document.getElementById('progress').style.width = (total > 0 ? Math.round(totalMatch/total*100) : 0) + '%';
+
+  const sectionsEl = document.getElementById('sections');
+  sectionsEl.innerHTML = '';
+
+  results.forEach((r, i) => {
+    const allDone = r.remaining.length === 0;
+    const div = document.createElement('div');
+    div.className = 'section';
+    div.innerHTML = `
+      <div class="section-header" onclick="toggle(${i})" role="button" aria-expanded="false" id="hdr-${i}">
+        <span class="section-title">${r.label}</span>
+        <div class="badges">
+          ${r.matched.length ? `<span class="badge badge-match">+${r.matched.length}</span>` : ''}
+          ${r.remaining.length ? `<span class="badge badge-remain">-${r.remaining.length}</span>` : ''}
+        </div>
+        <svg class="chevron" id="chev-${i}" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4,6 8,10 12,6"/></svg>
+      </div>
+      <div class="section-body" id="body-${i}">
+        ${allDone ? '<p class="all-match">B tiene todas las que le faltan a A en esta sección.</p>' : ''}
+        ${r.matched.length ? `<div class="row-label">B le puede dar</div><div class="stickers-row">${r.matched.sort((a,b)=>a-b).map(n=>`<span class="sticker sticker-match">${n}</span>`).join('')}</div>` : ''}
+        ${r.remaining.length ? `<div class="row-label">Siguen faltando</div><div class="stickers-row">${r.remaining.sort((a,b)=>a-b).map(n=>`<span class="sticker sticker-remain">${n}</span>`).join('')}</div>` : ''}
+      </div>
+    `;
+    sectionsEl.appendChild(div);
+  });
+
+  const rt = document.getElementById('results-title');
+  rt.style.display = 'block';
+  document.getElementById('results').style.display = 'block';
+
+  const exportLines = results
+    .filter(r => r.matched.length > 0)
+    .map(r => `${r.label}: ${r.matched.sort((a,b)=>a-b).join(', ')}`);
+  const exportBox = document.getElementById('export-box');
+  const exportText = document.getElementById('export-text');
+  if (exportLines.length > 0) {
+    exportText.textContent = exportLines.join('\n');
+    exportBox.style.display = 'block';
+  } else {
+    exportBox.style.display = 'none';
+  }
+
+  rt.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  if (results.length > 0) toggle(0);
+}
+
+function toggle(i) {
+  const body = document.getElementById('body-'+i);
+  const chev = document.getElementById('chev-'+i);
+  const hdr = document.getElementById('hdr-'+i);
+  if (!body) return;
+  const isOpen = body.classList.toggle('open');
+  chev.classList.toggle('open', isOpen);
+  hdr.setAttribute('aria-expanded', isOpen);
+}
+
+function copiarExport() {
+  const text = document.getElementById('export-text').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('btn-copy');
+    btn.textContent = 'Copiado';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copiar'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+function cargarEjemplo() {
+  document.getElementById('inputA').value = EJEMPLO_A;
+  document.getElementById('inputB').value = EJEMPLO_B;
+  showError('');
+  document.getElementById('results').style.display = 'none';
+}
+
+function limpiar() {
+  document.getElementById('inputA').value = '';
+  document.getElementById('inputB').value = '';
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('export-box').style.display = 'none';
+  document.getElementById('num1').classList.remove('done');
+  document.getElementById('num2').classList.remove('done');
+  showError('');
+}
+</script>
+</body>
+</html>
